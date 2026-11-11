@@ -1,0 +1,472 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UniPG Racing Hub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Tre stili della stessa interfaccia: A Pit wall (scuro, tecnico), B Studio (chiaro, pulito), C Carbon (scuro, aggressivo).
+   Ogni stile definisce tutti i token; la modalità chiaro/scuro li sceglie. */
+:root{
+  --bg:#090B0F;--surface:#11141A;--surface2:#181C24;--border:#232833;--fg:#F2F4F7;--muted:#98A2B3;
+  --accent:#D92D24;--accentText:#FF6F65;--onAccent:#FFFFFF;--ok:#3DD6A0;--warn:#FFB547;--info:#6AA8FF;--danger:#FF6F65;
+  --radius:12px;--radius-sm:8px;--shadow:none;--side-bg:#0D1014;--stripe:0px;
+  --h-font:"Barlow Condensed","Arial Narrow",Impact,sans-serif;--h-weight:700;--h-tr:uppercase;--h-ls:.02em;--h1-size:46px;--h2-size:21px;
+  --num-font:"Barlow Condensed","Arial Narrow",Impact,sans-serif;--num-weight:700;
+  --sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+:root[data-skin="a"][data-mode="light"]{--bg:#F1F3F6;--surface:#FFFFFF;--surface2:#EEF1F5;--border:#DCE0E7;--fg:#11151C;--muted:#566070;--accent:#C41E1E;--accentText:#B01515;--ok:#0B7A5A;--warn:#9A5B00;--info:#1D5FC4;--danger:#B01515;--side-bg:#FFFFFF;color-scheme:light}
+
+:root[data-skin="b"]{--bg:#0F1217;--surface:#171B22;--surface2:#1F242D;--border:#2A303B;--side-bg:#12161C;--radius:14px;--radius-sm:10px;
+  --h-font:Inter,system-ui,sans-serif;--h-weight:650;--h-tr:none;--h-ls:-.02em;--h1-size:32px;--h2-size:16px;--num-font:Inter,system-ui,sans-serif;--num-weight:650}
+:root[data-skin="b"][data-mode="light"]{--bg:#F5F6F8;--surface:#FFFFFF;--surface2:#F0F2F5;--border:#E7E9ED;--fg:#101319;--muted:#5C6574;--accent:#D5231B;--accentText:#C01B14;--ok:#0B7A5A;--warn:#9A5B00;--info:#1D5FC4;--danger:#B01515;--side-bg:#FFFFFF;
+  --shadow:0 1px 2px rgba(16,19,25,.05),0 6px 20px rgba(16,19,25,.05);color-scheme:light}
+
+:root[data-skin="c"]{--bg:#0A0A0C;--surface:#131316;--surface2:#1B1B20;--border:#2B2B32;--accent:#E10600;--accentText:#FF4A40;--radius:3px;--radius-sm:3px;--stripe:4px;
+  --side-bg:repeating-linear-gradient(45deg,#101012 0,#101012 3px,#0B0B0D 3px,#0B0B0D 6px);--h1-size:54px;--h2-size:22px}
+:root[data-skin="c"][data-mode="light"]{--bg:#ECECEE;--surface:#FFFFFF;--surface2:#F1F1F3;--border:#D6D6DB;--fg:#101012;--muted:#55555E;--accent:#CF0500;--accentText:#B00500;--ok:#0B7A5A;--warn:#9A5B00;--info:#1D5FC4;--danger:#B00500;--side-bg:#FFFFFF;color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p,ul,ol{margin:0}
+ul,ol{list-style:none;padding:0}
+:focus-visible{outline:2px solid var(--accentText);outline-offset:2px}
+
+.app{display:flex;min-height:100vh}
+.side{flex:0 0 236px;position:sticky;top:0;height:100vh;background:var(--side-bg);border-right:1px solid var(--border);border-top:var(--stripe) solid var(--accent);padding:22px 14px 18px;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px;text-decoration:none;color:inherit}
+.logo{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;font:700 23px var(--h-font)}
+.brand b{font:700 18px/1.05 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.07em}
+.brand b span{display:block;color:var(--muted);font-size:12px;letter-spacing:.22em;margin-top:2px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav h3{padding:14px 10px 6px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--muted);font-weight:500;text-align:left}
+.nav button:hover{color:var(--fg);background:var(--surface2)}
+.nav .on{background:var(--surface2);color:var(--fg);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
+.nav svg{flex:0 0 18px}
+.nav .grow{flex:1}
+.pill{background:var(--accent);color:var(--onAccent);font-size:11px;font-weight:600;border-radius:10px;padding:1px 7px;min-width:20px;text-align:center}
+.me{margin-top:auto;border-top:1px solid var(--border);padding-top:16px;display:flex;align-items:center;gap:10px}
+.avatar{flex:0 0 36px;width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px}
+.me small{display:block;color:var(--muted);font-size:12px}
+.me .sw{margin-left:auto;border:0;background:none;color:var(--accentText);font-size:12px;font-weight:600;padding:6px 2px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 32px;border-bottom:1px solid var(--border);background:var(--bg)}
+.demo{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--warn);padding:4px 10px;border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:20px}
+.demo i{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.tools{margin-left:auto;display:flex;align-items:center;gap:10px}
+.seg{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:8px 12px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--onAccent)}
+.seglab{font-size:12px;color:var(--muted);font-weight:500}
+.btn{height:38px;padding:0 15px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:var(--radius-sm);font-size:13px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}
+.btn.sm{height:32px;padding:0 12px;font-size:13px}
+.btn.xs{height:30px;padding:0 11px;font-size:12px}
+.btn:hover{border-color:var(--accent)}
+.icon-btn{position:relative;width:38px;height:38px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center}
+.icon-btn .pill{position:absolute;top:-7px;right:-7px;padding:1px 5px;min-width:18px}
+
+.content{width:100%;max-width:1320px;margin:0 auto;padding:32px max(20px,env(safe-area-inset-right,0px)) 40px max(32px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:24px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px}
+.head>div:first-child{flex:1 1 320px;min-width:0}
+.kick{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accentText)}
+h1{margin-top:6px;font:var(--h-weight) var(--h1-size)/1.02 var(--h-font);letter-spacing:var(--h-ls);text-transform:var(--h-tr);text-wrap:balance}
+.sub{color:var(--muted);margin-top:8px;max-width:64ch}
+h2{font:var(--h-weight) var(--h2-size)/1.2 var(--h-font);letter-spacing:var(--h-ls);text-transform:var(--h-tr)}
+h3{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:22px}
+.card>.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:18px 22px;border-bottom:1px solid var(--border)}
+.link{border:0;background:none;color:var(--accentText);font-size:13px;font-weight:600;padding:4px 0}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.kpi{padding:20px 22px}
+.kpi .l{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:var(--num-weight) 54px/1.05 var(--num-font);margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .n{font-size:13px;color:var(--muted);margin-top:2px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.row>.w2{flex:2 1 540px;min-width:0}
+.row>.w1{flex:1 1 340px;min-width:0}
+.col{display:flex;flex-direction:column;gap:18px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{text-align:left;color:var(--muted);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:12px 10px}
+th:first-child,td:first-child{padding-left:22px}
+th:last-child,td:last-child{padding-right:22px}
+td{padding:15px 10px;border-top:1px solid var(--border);vertical-align:middle}
+td small{display:block;font-size:12px;color:var(--muted)}
+.mut{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.ok{--c:var(--ok)}.warn{--c:var(--warn)}.info{--c:var(--info)}.danger{--c:var(--danger)}.muted{--c:var(--muted)}.acc{--c:var(--accentText)}
+.bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar.good i{background:var(--ok)}
+.stack{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px}
+.stack i{display:block;background:var(--c)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:7px;color:var(--muted)}
+.legend b{color:var(--fg);font-weight:600}
+.legend i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.list>li{padding:16px 22px;border-top:1px solid var(--border)}
+.list>li:first-child{border-top:0}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.gap{display:flex;gap:8px;flex-wrap:wrap}
+.audit{display:flex;flex-direction:column;gap:12px;font-size:13px}
+.audit li{display:flex;gap:12px}
+.audit .mono{flex:0 0 44px;color:var(--muted)}
+.dept-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.tasks li{display:flex;align-items:center;gap:16px;padding:15px 22px;border-top:1px solid var(--border)}
+.tasks input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 18px}
+.tasks label{flex:1;min-width:0}
+.tasks small{display:block;color:var(--muted);font-size:12px}
+.tasks .done label div{text-decoration:line-through;color:var(--muted)}
+.onb li{display:flex;gap:10px;align-items:center;font-size:13px}
+.onb .d{color:var(--muted)}
+.notif li{display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.notif .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:6px}
+.notif .dot.read{background:var(--border)}
+.notif .t{flex:1}
+.rs{display:flex;gap:6px}
+.rs button{height:32px;padding:0 12px;border:1px solid var(--border);background:transparent;border-radius:var(--radius-sm);font-size:13px;font-weight:600}
+.rs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pills button{height:34px;padding:0 16px;border:1px solid var(--border);background:var(--surface);border-radius:20px;font-size:13px;font-weight:600}
+.pills button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}
+.pills .lab{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.miles{display:flex;flex-wrap:wrap;gap:22px;align-items:center;padding:20px 22px}
+.miles .p{flex:1 1 280px;min-width:0}
+.miles ol{display:flex;flex-wrap:wrap;gap:22px;font-size:13px}
+.miles li{display:flex;align-items:center;gap:8px}
+.miles .dot{flex:0 0 12px;width:12px;height:12px;border-radius:50%}
+.board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:16px;overflow-x:auto;align-items:start;padding-bottom:4px}
+.colm{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:12px;min-height:380px;box-shadow:var(--shadow)}
+.colm .ct{display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
+.kc{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+.kc.blocked{box-shadow:inset 3px 0 0 var(--danger)}
+.kc .t{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.kc .t span:last-child{font:11px var(--mono);color:var(--muted);font-weight:500}
+.kc .d{color:var(--muted);font-size:12px;margin:4px 0 10px}
+.kc .bl{font-size:12px;font-weight:600;color:var(--danger);margin-bottom:10px}
+.kc .f{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.kc .f .who{width:24px;height:24px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:10.5px}
+.selrow{background:var(--surface2)}
+.rowbtn{width:100%;text-align:left;padding:0;border:0;background:none;font-weight:600}
+.split{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.split>.a{flex:3 1 560px;min-width:0}
+.split>.b{flex:2 1 360px;min-width:0}
+.detail{display:flex;flex-direction:column;gap:22px}
+.detail ul,.detail ol{display:flex;flex-direction:column;gap:10px;font-size:13px}
+.dep{padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);box-shadow:inset 3px 0 0 var(--c)}
+.perm li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--border);font-size:13px}
+.note{font-size:12px;color:var(--muted)}
+.only-narrow{display:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:var(--radius-sm);font-weight:600;z-index:30}
+
+@media (max-width:900px){
+  .side{flex-basis:68px;padding:22px 8px 18px;gap:18px}
+  .brand{justify-content:center;padding:0}
+  .brand b,.nav h3,.nav .grow,.me>div,.me .sw{display:none}
+  .nav button{position:relative;justify-content:center;padding:11px 0}
+  .nav .pill{position:absolute;top:3px;right:8px;padding:0 5px;min-width:16px;font-size:10px}
+  .me{justify-content:center}
+  .only-narrow{display:inline-flex;align-items:center}
+  .top{padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+  .content{padding:22px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+  h1{font-size:calc(var(--h1-size) * .78)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi .v{font-size:44px}
+  .seglab{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+(function () {
+  var ICON = {
+    home: 'M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z',
+    users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+    kanban: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+    wrench: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z',
+    bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0'
+  };
+  function svg(name, size) {
+    size = size || 18;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICON[name] + '"/></svg>';
+  }
+
+  /* Solo le sezioni che esistono: niente voci spente. */
+  var NAV = {
+    admin: [['Gestione', [['Panoramica', 'home', 'admin'], ['Persone', 'users', 'people', 'req']]], ['Lavoro', [['Progetti', 'kanban', 'projects'], ['Engineering', 'wrench', 'engineering']]]],
+    member: [['Il mio spazio', [['Home', 'home', 'member'], ['Il mio lavoro', 'kanban', 'projects'], ['Engineering', 'wrench', 'engineering']]]]
+  };
+  var VIEWS = { admin: 1, member: 1, projects: 1, engineering: 1, people: 1 };
+  var SKIN_MODE = { a: 'dark', b: 'light', c: 'dark' };
+  var SKIN_NAME = { a: 'Pit wall', b: 'Studio', c: 'Carbon' };
+
+  function clock() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+
+  var S = {
+    role: 'admin', view: 'admin', skin: 'b', mode: 'light', acked: false, rsvp: { e1: 'yes' }, filter: 'Tutte', sel: 0, tab: 'Tutti', roleSel: 0, toast: '', done: {},
+    people: [
+      { id: 'p1', n: 'Persona Demo A', c: 'Ing. Meccanica', d: 'Aerodinamica', r: 'Responsabile reparto', s: 'Attivo' },
+      { id: 'p2', n: 'Persona Demo B', c: 'Economia', d: 'Business', r: 'Membro', s: 'Attivo' },
+      { id: 'p3', n: 'Persona Demo C', c: 'Ing. Informatica', d: 'Software & Telemetria', r: 'Project Leader', s: 'Attivo' },
+      { id: 'p4', n: 'Persona Demo D', c: 'Design', d: 'Media & Design', r: 'Membro', s: 'Attivo' },
+      { id: 'p5', n: 'Persona Demo E', c: 'Ing. Meccanica', d: 'Telaio & Dinamica', r: 'Membro', s: 'In attesa' },
+      { id: 'p6', n: 'Persona Demo F', c: 'Economia', d: 'Business', r: 'Membro', s: 'In attesa' },
+      { id: 'p7', n: 'Persona Demo G', c: 'Ing. Industriale', d: 'Motore', r: 'Membro', s: 'Sospeso' },
+      { id: 'p8', n: 'Persona Demo H', c: 'Design', d: 'Media & Design', r: 'Membro', s: 'In attesa' }
+    ],
+    audit: [['16:42', 'Ruolo “Responsabile reparto” assegnato a Persona Demo A'], ['15:10', 'Documento “Procedura montaggio” aggiornato alla v3'], ['12:03', 'Account attivato: Persona Demo D'], ['09:27', 'Account sospeso: Persona Demo G']]
+  };
+  var h = (location.hash || '').replace('#', '');
+  if (VIEWS[h]) { S.view = h; S.role = h === 'member' ? 'member' : 'admin'; }
+
+  function pending() { return S.people.filter(function (p) { return p.s === 'In attesa'; }); }
+  function chip(tone, text) { return '<span class="chip ' + tone + '">' + text + '</span>'; }
+  function head(kick, title, sub) {
+    return '<div class="head"><div><div class="kick">' + kick + '</div><h1>' + title + '</h1><div class="sub">' + sub + '</div></div></div>';
+  }
+
+  /* ---------- Shell ---------- */
+  function shell(inner) {
+    var admin = S.role === 'admin';
+    var who = admin ? ['UD', 'Utente Demo', 'Responsabile', 'Spazio membro →', 'member'] : ['PD', 'Persona Demo', 'Aerodinamica', 'Pannello admin →', 'admin'];
+    var side = NAV[S.role].map(function (g) {
+      return '<h3>' + g[0] + '</h3>' + g[1].map(function (n) {
+        var on = n[2] === S.view;
+        var b = n[3] === 'req' ? (pending().length ? '<span class="pill">' + pending().length + '</span>' : '') : '';
+        return '<button type="button" data-act="go" data-to="' + n[2] + '" data-key="nav-' + n[2] + '" title="' + n[0] + '" aria-label="' + n[0] + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' + svg(n[1]) + '<span class="grow">' + n[0] + '</span>' + b + '</button>';
+      }).join('');
+    }).join('');
+    return '<div class="app">' +
+      '<aside class="side"><a class="brand" href="#" onclick="return false"><span class="logo">73</span><b>UNIPG RACING<span>HUB</span></b></a>' +
+      '<nav class="nav" aria-label="Navigazione principale">' + side + '</nav>' +
+      '<div class="me"><span class="avatar">' + who[0] + '</span><div style="font-size:13px;line-height:1.3"><b>' + who[1] + '</b><small>' + who[2] + '</small></div>' +
+      '<button type="button" class="sw" data-act="role" data-to="' + who[4] + '" data-key="role">' + who[3] + '</button></div></aside>' +
+      '<div class="main"><header class="top"><span class="demo"><i></i>Dati dimostrativi</span>' +
+      '<div class="tools">' +
+      '<button type="button" class="btn only-narrow" data-act="role" data-to="' + who[4] + '" data-key="toprole">' + (admin ? 'Spazio membro' : 'Pannello admin') + '</button>' +
+      '<button type="button" class="btn" data-act="mode" data-key="mode">' + (S.mode === 'dark' ? 'Tema chiaro' : 'Tema scuro') + '</button>' +
+      '<button type="button" class="icon-btn" data-act="bell" data-key="bell" aria-label="Notifiche, 4 non lette">' + svg('bell') + '<span class="pill">4</span></button></div></header>' +
+      '<div class="content">' + inner + '</div></div>' +
+      (S.toast ? '<div class="toast" role="status">' + S.toast + '</div>' : '') + '</div>';
+  }
+
+  /* ---------- Viste ---------- */
+  function adminView() {
+    var dl = [
+      ['Revisione tecnica ala posteriore', 'Pacchetto aerodinamico', 'Aerodinamica', '04 nov', 'danger', 'In ritardo'],
+      ['Consegna cablaggio bassa tensione', 'Impianto elettrico', 'Software & Telemetria', '06 nov', 'warn', 'A rischio'],
+      ['Business plan: bozza finale', 'Presentazione Business', 'Business', '10 nov', 'info', 'In corso'],
+      ['Analisi strutturale telaio', 'Telaio 2026', 'Telaio & Dinamica', '12 nov', 'info', 'In corso'],
+      ['Calibrazione centralina', 'Powertrain', 'Motore', '15 nov', 'muted', 'Da iniziare']
+    ];
+    var tones = [['danger', 'In ritardo'], ['warn', 'A rischio'], ['info', 'In corso'], ['muted', 'Da iniziare']];
+    var counts = tones.map(function (t) { return [t[0], t[1], dl.filter(function (d) { return d[4] === t[0]; }).length]; });
+    var wl = [['Aerodinamica', 14, 82], ['Telaio & Dinamica', 11, 65], ['Software & Telemetria', 9, 53], ['Motore', 8, 47], ['Business', 6, 35], ['Media & Design', 5, 29], ['Officina', 4, 24]];
+    var acks = [['Norme di sicurezza in officina', '28 / 50', 56], ['Calendario test in pista', '41 / 50', 82]];
+    var req = pending();
+    var kpis = [['Task in ritardo', '12', 'su 4 progetti'], ['Blocchi aperti', '5', '2 tra reparti diversi'], ['Richieste da approvare', String(req.length), 'iscrizioni in attesa'], ['Completamento progetti', '64%', 'media dei progetti attivi']];
+    var reqHtml = req.length ? req.map(function (r) {
+      return '<li style="display:flex;flex-direction:column;gap:12px"><div><b>' + r.n + '</b><div class="mut" style="font-size:13px">' + r.c + ' · interesse: ' + r.d + '</div></div>' +
+        '<div class="gap"><button type="button" class="btn sm primary" data-act="approve" data-id="' + r.id + '" data-key="ap' + r.id + '">Approva</button>' +
+        '<button type="button" class="btn sm" data-act="reject" data-id="' + r.id + '" data-key="rj' + r.id + '">Rifiuta</button></div></li>';
+    }).join('') : '<li class="mut">Nessuna richiesta in attesa.</li>';
+    return head('Admin Control Center', 'Panoramica', 'Stagione 2026 · tutti i reparti') +
+      '<section class="kpis" aria-label="Indicatori">' + kpis.map(function (k) { return '<div class="card kpi"><div class="l">' + k[0] + '</div><div class="v">' + k[1] + '</div><div class="n">' + k[2] + '</div></div>'; }).join('') + '</section>' +
+      '<div class="row"><section class="card w2"><div class="ch"><h2>Scadenze critiche</h2><button type="button" class="link" data-act="go" data-to="projects" data-key="lnkp">Vedi progetti →</button></div>' +
+      '<div style="padding:18px 22px 4px"><div class="stack" role="img" aria-label="Stato delle scadenze">' + counts.map(function (c) { return c[2] ? '<i style="--c:var(--' + c[0] + ');flex:' + c[2] + '"></i>' : ''; }).join('') + '</div>' +
+      '<div class="legend">' + counts.map(function (c) { return '<span style="--c:var(--' + c[0] + ')"><i></i><b>' + c[2] + '</b> ' + c[1] + '</span>'; }).join('') + '</div></div>' +
+      '<div class="scroll" style="margin-top:12px"><table><thead><tr><th scope="col">Task</th><th scope="col">Reparto</th><th scope="col">Scadenza</th><th scope="col">Stato</th></tr></thead><tbody>' +
+      dl.map(function (d) { return '<tr><td><b style="font-weight:500">' + d[0] + '</b><small>' + d[1] + '</small></td><td class="mut">' + d[2] + '</td><td class="mono">' + d[3] + '</td><td>' + chip(d[4], d[5]) + '</td></tr>'; }).join('') +
+      '</tbody></table></div></section>' +
+      '<section class="card w1"><div class="ch"><h2>Richieste di iscrizione</h2></div><ul class="list">' + reqHtml + '</ul></section></div>' +
+      '<div class="row"><section class="card pad w1"><h2 style="margin-bottom:18px">Carico per reparto</h2><ul style="display:flex;flex-direction:column;gap:14px">' +
+      wl.map(function (w) { return '<li><div class="dept-row"><span>' + w[0] + '</span><span class="mono mut">' + w[1] + ' aperti</span></div><div class="bar"><i style="width:' + w[2] + '%"></i></div></li>'; }).join('') + '</ul></section>' +
+      '<div class="col w1"><section class="card pad"><h2 style="margin-bottom:18px">Annunci da confermare</h2><ul style="display:flex;flex-direction:column;gap:18px">' +
+      acks.map(function (a) { return '<li><div class="spread"><b style="font-weight:500">' + a[0] + '</b><span class="mono mut" style="font-size:12px">' + a[1] + '</span></div><div class="bar good" style="margin-top:9px"><i style="width:' + a[2] + '%"></i></div></li>'; }).join('') + '</ul></section>' +
+      '<section class="card pad"><div class="spread" style="margin-bottom:16px"><h2>Attività recente</h2><span class="note">Audit log</span></div><ul class="audit">' +
+      S.audit.slice(0, 5).map(function (e) { return '<li><span class="mono">' + e[0] + '</span><span>' + e[1] + '</span></li>'; }).join('') + '</ul></section></div></div>';
+  }
+
+  var TASKS = [
+    ['tk1', 'Revisione tecnica ala posteriore', 'Pacchetto aerodinamico', 'Alta', 'danger', '04 nov'],
+    ['tk2', 'Aggiornare simulazione CFD', 'Pacchetto aerodinamico', 'Alta', 'danger', '07 nov'],
+    ['tk3', 'Report prove in galleria del vento', 'Validazione sperimentale', 'Media', 'warn', '12 nov'],
+    ['tk4', 'Preparare slide revisione di progetto', 'Design Event', 'Media', 'warn', '14 nov'],
+    ['tk5', 'Archiviare dati prova su repository', 'Validazione sperimentale', 'Bassa', 'info', '20 nov']
+  ];
+  function memberView() {
+    var onb = [['Completa il profilo', 1], ['Leggi le norme di sicurezza', 1], ['Unisciti al canale del reparto', 1], ['Visita guidata dell’officina', 0], ['Leggi la guida “Come lavoriamo”', 0]];
+    var ev = [['e1', 'Riunione generale', 'Lun 02 nov · 18:00 · Dip. Ingegneria'], ['e2', 'Workshop: composites', 'Mer 11 nov · 17:00 · Officina'], ['e3', 'Revisione tecnica reparti', 'Lun 16 nov · 17:30 · Aula T']];
+    var nt = [['Sei stato menzionato in “Pacchetto aerodinamico”', '12m', 0], ['Nuovo commento su “Revisione ala posteriore”', '1h', 0], ['Documento aggiornato: Procedura montaggio v3', '3h', 0], ['Evento spostato: Workshop composites', 'ieri', 1]];
+    var open = TASKS.filter(function (t) { return !S.done[t[0]]; }).length;
+    return head('Member Workspace · Aerodinamica', 'Ciao, Persona', 'Hai ' + open + ' attività aperte e ' + (S.acked ? 'nessun annuncio' : '1 annuncio') + ' da confermare.') +
+      '<div class="row"><section class="card w2"><div class="ch"><h2>Le mie attività</h2><button type="button" class="link" data-act="go" data-to="projects" data-key="lnkb">Apri la board →</button></div><ul class="tasks">' +
+      TASKS.map(function (t) {
+        var d = S.done[t[0]];
+        return '<li class="' + (d ? 'done' : '') + '"><input type="checkbox" id="' + t[0] + '" data-act="task" data-id="' + t[0] + '" data-key="c' + t[0] + '"' + (d ? ' checked' : '') + '><label for="' + t[0] + '"><div>' + t[1] + '</div><small>' + t[2] + '</small></label>' + chip(t[4], t[3]) + '<span class="mono mut" style="flex:0 0 56px;text-align:right">' + t[5] + '</span></li>';
+      }).join('') + '</ul></section>' +
+      '<div class="col w1"><section class="card pad"><div class="spread" style="margin-bottom:10px"><h2>Annuncio</h2>' + chip(S.acked ? 'ok' : 'warn', S.acked ? 'Confermato' : 'Richiede conferma') + '</div>' +
+      '<b>Norme di sicurezza in officina</b><div class="mut" style="font-size:13px;margin:4px 0 16px">Pubblicato dal Team Leader · 2 ore fa</div>' +
+      '<button type="button" class="btn ' + (S.acked ? '' : 'primary') + '" data-act="ack" data-key="ack" style="' + (S.acked ? 'color:var(--ok);border-color:var(--ok)' : '') + '">' + (S.acked ? '✓ Letto e confermato' : 'Ho letto e confermo') + '</button></section>' +
+      '<section class="card pad"><div class="spread" style="margin-bottom:12px"><h2>Onboarding</h2><span class="mono mut" style="font-size:12px">3 / 5</span></div><div class="bar good" style="margin-bottom:16px"><i style="width:60%"></i></div><ul class="onb" style="display:flex;flex-direction:column;gap:10px">' +
+      onb.map(function (o) { return '<li class="' + (o[1] ? 'd' : '') + '"><span aria-hidden="true">' + (o[1] ? '✓' : '○') + '</span><span>' + o[0] + '</span></li>'; }).join('') + '</ul></section></div></div>' +
+      '<div class="row"><section class="card pad w1"><h2 style="margin-bottom:18px">Prossimi eventi</h2><ul style="display:flex;flex-direction:column;gap:18px">' +
+      ev.map(function (e) {
+        var v = S.rsvp[e[0]];
+        return '<li class="spread" style="flex-wrap:wrap"><div><div style="font-weight:500">' + e[1] + '</div><div class="mut" style="font-size:12px">' + e[2] + '</div></div><div class="rs" role="group" aria-label="Conferma presenza"><button type="button" data-act="rsvp" data-id="' + e[0] + '" data-v="yes" data-key="y' + e[0] + '" aria-pressed="' + (v === 'yes') + '">Ci sarò</button><button type="button" data-act="rsvp" data-id="' + e[0] + '" data-v="no" data-key="n' + e[0] + '" aria-pressed="' + (v === 'no') + '">Non posso</button></div></li>';
+      }).join('') + '</ul></section>' +
+      '<div class="col w1"><section class="card pad" id="notifiche"><h2 style="margin-bottom:16px">Notifiche</h2><ul class="notif" style="display:flex;flex-direction:column;gap:12px">' +
+      nt.map(function (n) { return '<li><span class="dot ' + (n[2] ? 'read' : '') + '"></span><span class="t">' + n[0] + '</span><span class="mono mut" style="font-size:12px">' + n[1] + '</span></li>'; }).join('') + '</ul></section>' +
+      '<section class="card pad"><h2 style="margin-bottom:16px">Il mio andamento</h2><div style="display:flex;gap:32px"><div><div style="font:var(--num-weight) 44px/1 var(--num-font)">9</div><div class="mut" style="font-size:12px;margin-top:4px">task completati nel mese</div></div><div><div style="font:var(--num-weight) 44px/1 var(--num-font)">2</div><div class="mut" style="font-size:12px;margin-top:4px">progetti attivi</div></div></div></section></div></div>';
+  }
+
+  function projectsView() {
+    var pri = { Alta: 'danger', Media: 'warn', Bassa: 'info' };
+    function card(id, title, dept, p, who, due, c, dep) { return { id: id, title: title, dept: dept, p: p, who: who, due: due, c: c, dep: dep || '' }; }
+    var cols = [
+      ['Da fare', [card('T-150', 'Verifica carichi su supporto ala', 'Telaio & Dinamica', 'Alta', 'LF', '08 nov', 2, 'Bloccato da T-142'), card('T-153', 'Rendering per presentazione Design Event', 'Media & Design', 'Bassa', 'ED', '18 nov', 0), card('T-156', 'Definire piano prove in pista', 'Aerodinamica', 'Media', 'PD', '19 nov', 1)]],
+      ['In corso', [card('T-142', 'Revisione tecnica ala posteriore', 'Aerodinamica', 'Alta', 'PD', '04 nov', 5), card('T-147', 'Simulazione CFD configurazione B', 'Aerodinamica', 'Media', 'MB', '07 nov', 3)]],
+      ['In revisione', [card('T-139', 'Report prove galleria del vento', 'Aerodinamica', 'Media', 'GR', '12 nov', 4)]],
+      ['Fatto', [card('T-131', 'Modello CAD ala v2', 'Aerodinamica', 'Media', 'MB', '28 ott', 2), card('T-128', 'Post social: galleria del vento', 'Media & Design', 'Bassa', 'ED', '30 ott', 1)]]
+    ];
+    var ms = [['Revisione di progetto', '10 nov', 'a rischio', 'var(--warn)'], ['Test in galleria del vento', '20 nov', 'in programma', 'var(--border)'], ['Consegna Design Report', '05 dic', 'in programma', 'var(--border)']];
+    return head('Progetti · Cross-reparto', 'Pacchetto aerodinamico', 'Aerodinamica · Telaio &amp; Dinamica · Media &amp; Design · responsabile: Persona Demo') +
+      '<section class="card miles" aria-label="Milestone"><div class="p"><div class="spread" style="font-size:13px;margin-bottom:8px"><b>Avanzamento complessivo</b><span class="mono mut">3 task su 8 completati</span></div><div class="bar good"><i style="width:38%"></i></div></div><ol>' +
+      ms.map(function (m) { return '<li><span class="dot" style="background:' + m[3] + '"></span><span><b>' + m[0] + '</b> <span class="mut">· ' + m[1] + ' · ' + m[2] + '</span></span></li>'; }).join('') + '</ol></section>' +
+      '<div class="pills" role="group" aria-label="Filtra per priorità"><span class="lab">Priorità</span>' +
+      ['Tutte', 'Alta', 'Media', 'Bassa'].map(function (f) { return '<button type="button" data-act="filter" data-v="' + f + '" data-key="f' + f + '" aria-pressed="' + (S.filter === f) + '">' + f + '</button>'; }).join('') + '</div>' +
+      '<section class="board" aria-label="Board">' + cols.map(function (c) {
+        var cards = c[1].filter(function (k) { return S.filter === 'Tutte' || k.p === S.filter; });
+        return '<div class="colm"><div class="ct"><h2>' + c[0] + '</h2><span class="mono mut" style="font-size:12px">' + cards.length + '</span></div>' + cards.map(function (k) {
+          return '<article class="kc ' + (k.dep ? 'blocked' : '') + '"><div class="t"><span>' + k.title + '</span><span>' + k.id + '</span></div><div class="d">' + k.dept + '</div>' + (k.dep ? '<div class="bl">' + k.dep + '</div>' : '') +
+            '<div class="f">' + chip(pri[k.p], k.p) + '<span style="display:flex;align-items:center;gap:10px"><span>' + k.c + ' commenti</span><span class="mono">' + k.due + '</span><span class="who">' + k.who + '</span></span></div></article>';
+        }).join('') + '</div>';
+      }).join('') + '</section>';
+  }
+
+  var SUBS = [
+    { name: 'Ala posteriore', dept: 'Aerodinamica', st: 'In revisione', rev: 'C', ecr: 2, bl: 1, comps: [['Profilo principale', 'In revisione'], ['Paratia laterale', 'Validato'], ['Supporti', 'In progettazione']], revs: [['C', 'Profilo modificato dopo prove', '02 nov'], ['B', 'Nuova paratia', '21 ott'], ['A', 'Concept iniziale', '03 ott']], tests: [['TR-014', 'Galleria del vento · config. base', 'Superato'], ['TR-015', 'Galleria del vento · nolder 10 mm', 'Da ripetere']], deps: [['Bloccato da T-139: report prove non ancora approvato', 'danger'], ['Dipende da Telaio: interfaccia di fissaggio', 'warn']] },
+    { name: 'Telaio e monoscocca', dept: 'Telaio & Dinamica', st: 'In progettazione', rev: 'B', ecr: 1, bl: 0, comps: [['Gabbia anteriore', 'In progettazione'], ['Fondo', 'In revisione'], ['Attacchi sospensioni', 'Concept']], revs: [['B', 'Rinforzo zona pedaliera', '29 ott'], ['A', 'Prima geometria', '12 set']], tests: [['TR-009', 'Prova rigidezza torsionale', 'In attesa']], deps: [['Nessun blocco aperto', 'ok']] },
+    { name: 'Centralina e cablaggio', dept: 'Software & Telemetria', st: 'In progettazione', rev: 'A', ecr: 0, bl: 1, comps: [['Centralina principale', 'In progettazione'], ['Cablaggio bassa tensione', 'In revisione'], ['Sensori', 'Concept']], revs: [['A', 'Schema elettrico iniziale', '15 ott']], tests: [], deps: [['Bloccato: attesa connettori da fornitore', 'danger']] },
+    { name: 'Gruppo motore', dept: 'Motore', st: 'Concept', rev: '—', ecr: 0, bl: 0, comps: [['Aspirazione', 'Concept'], ['Scarico', 'Concept']], revs: [], tests: [['TR-003', 'Banco prova: calibrazione base', 'Superato']], deps: [['Nessun blocco aperto', 'ok']] },
+    { name: 'Sospensioni anteriori', dept: 'Telaio & Dinamica', st: 'Validato', rev: 'D', ecr: 0, bl: 0, comps: [['Braccio superiore', 'Validato'], ['Braccio inferiore', 'Validato'], ['Mozzo', 'Validato']], revs: [['D', 'Tolleranze aggiornate', '18 ott'], ['C', 'Geometria finale', '30 set']], tests: [['TR-006', 'Prova a fatica', 'Superato']], deps: [['Nessun blocco aperto', 'ok']] }
+  ];
+  var STT = { 'Concept': 'muted', 'In progettazione': 'info', 'In revisione': 'warn', 'Validato': 'ok' };
+  function engineeringView() {
+    var cur = SUBS[S.sel];
+    var res = function (r) { return r === 'Superato' ? 'ok' : (r === 'Da ripetere' ? 'warn' : 'info'); };
+    return head('Engineering workspace · Vettura n° 73', 'Sottosistemi', 'Stato di progetto, revisioni, test e richieste di modifica. I file CAD restano nei vostri strumenti: qui si collegano.') +
+      '<div class="split"><section class="card a"><div class="scroll"><table style="min-width:620px"><caption style="text-align:left;padding:18px 22px;font:var(--h-weight) var(--h2-size) var(--h-font);letter-spacing:var(--h-ls);text-transform:var(--h-tr)">Stato dei sottosistemi</caption>' +
+      '<thead><tr><th scope="col">Sottosistema</th><th scope="col">Reparto</th><th scope="col">Stato progetto</th><th scope="col">Rev.</th><th scope="col">ECR</th><th scope="col">Blocchi</th></tr></thead><tbody>' +
+      SUBS.map(function (s, i) {
+        return '<tr class="' + (S.sel === i ? 'selrow' : '') + '"><td><button type="button" class="rowbtn" data-act="sub" data-i="' + i + '" data-key="s' + i + '" aria-pressed="' + (S.sel === i) + '">' + s.name + '</button></td><td class="mut">' + s.dept + '</td><td>' + chip(STT[s.st], s.st) + '</td><td class="mono">' + s.rev + '</td><td class="mono">' + s.ecr + '</td><td class="mono" style="color:' + (s.bl ? 'var(--danger)' : 'var(--muted)') + '">' + s.bl + '</td></tr>';
+      }).join('') + '</tbody></table></div></section>' +
+      '<section class="card pad b detail" aria-label="Dettaglio sottosistema"><div><div class="kick" style="color:var(--muted)">Selezionato</div><h2 style="font-size:calc(var(--h2-size) * 1.3);margin-top:4px">' + cur.name + '</h2><div class="mut" style="font-size:13px;margin-top:2px">' + cur.dept + ' · responsabile tecnico: Persona Demo</div></div>' +
+      '<div><h3 style="margin-bottom:10px">Componenti</h3><ul>' + cur.comps.map(function (c) { return '<li class="spread"><span>' + c[0] + '</span>' + chip(STT[c[1]], c[1]) + '</li>'; }).join('') + '</ul></div>' +
+      '<div><h3 style="margin-bottom:10px">Storico revisioni</h3>' + (cur.revs.length ? '<ol>' + cur.revs.map(function (r) { return '<li style="display:flex;gap:10px"><span class="mono" style="flex:0 0 44px">' + r[0] + '</span><span style="flex:1">' + r[1] + '</span><span class="mono mut">' + r[2] + '</span></li>'; }).join('') + '</ol>' : '<p class="mut" style="font-size:13px">Nessuna revisione registrata.</p>') + '</div>' +
+      '<div><h3 style="margin-bottom:10px">Test registrati</h3>' + (cur.tests.length ? '<ul>' + cur.tests.map(function (t) { return '<li class="spread"><span><span class="mono mut">' + t[0] + '</span> · ' + t[1] + '</span>' + chip(res(t[2]), t[2]) + '</li>'; }).join('') + '</ul>' : '<p class="mut" style="font-size:13px">Nessun test registrato.</p>') + '</div>' +
+      '<div><h3 style="margin-bottom:10px">Dipendenze e blocchi</h3><ul>' + cur.deps.map(function (d) { return '<li class="dep" style="--c:var(--' + d[1] + ')">' + d[0] + '</li>'; }).join('') + '</ul></div></section></div>';
+  }
+
+  var ROLES = ['Admin', 'Team Leader', 'Resp. reparto', 'Project Leader', 'Membro'];
+  var PERMS = ['Gestire account e ruoli', 'Approvare richieste di iscrizione', 'Creare reparti', 'Creare progetti', 'Creare e assegnare task', 'Annunci a tutto il team', 'Annunci di reparto', 'Pianificare riunioni', 'Caricare documenti', 'Vedere budget e acquisti', 'Approvare acquisti', 'Leggere l’audit log', 'Modificare le impostazioni'];
+  var NO = 'Non concesso';
+  var MATRIX = [
+    ['Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Con permesso finanza', 'Con permesso finanza', 'Tutti', 'Tutti'],
+    ['Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Tutti', 'Con permesso finanza', 'Con permesso finanza', 'Solo lettura', NO],
+    [NO, 'Suo reparto', NO, 'Suo reparto', 'Suo reparto', NO, 'Suo reparto', 'Suo reparto', 'Suo reparto', 'Solo richieste', NO, NO, NO],
+    [NO, NO, NO, NO, 'Suo progetto', NO, NO, 'Suo progetto', 'Suo progetto', 'Solo richieste', NO, NO, NO],
+    [NO, NO, NO, NO, 'Solo propri', NO, NO, NO, 'Secondo reparto', NO, NO, NO, NO]
+  ];
+  function peopleView() {
+    var stt = { 'Attivo': 'ok', 'In attesa': 'warn', 'Sospeso': 'danger' };
+    var act = { 'Attivo': ['Sospendi', 'suspend'], 'In attesa': ['Approva', 'approve'], 'Sospeso': ['Riattiva', 'activate'] };
+    var rows = S.people.filter(function (p) { return S.tab === 'Tutti' || p.s === S.tab; });
+    var tabs = [['Tutti', 'Tutti'], ['Attivo', 'Attivi'], ['In attesa', 'In attesa'], ['Sospeso', 'Sospesi']];
+    return head('Admin Control Center', 'Persone e permessi', 'Ogni modifica a ruoli, accessi e permessi viene registrata nell’audit log.') +
+      '<div class="split"><section class="card a"><div class="pills" role="group" aria-label="Filtra per stato" style="padding:16px 22px;border-bottom:1px solid var(--border)">' +
+      tabs.map(function (t) { return '<button type="button" data-act="tab" data-v="' + t[0] + '" data-key="t' + t[0] + '" aria-pressed="' + (S.tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="scroll"><table style="min-width:640px"><thead><tr><th scope="col">Persona</th><th scope="col">Reparto</th><th scope="col">Ruolo</th><th scope="col">Stato</th><th scope="col">Azione</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(function (p) { return '<tr><td><b>' + p.n + '</b><small>' + p.c + '</small></td><td class="mut">' + p.d + '</td><td>' + p.r + '</td><td>' + chip(stt[p.s], p.s) + '</td><td><button type="button" class="btn xs" data-act="' + act[p.s][1] + '" data-id="' + p.id + '" data-key="pa' + p.id + '">' + act[p.s][0] + '</button></td></tr>'; }).join('') : '<tr><td colspan="5" class="mut">Nessuna persona in questo stato.</td></tr>') +
+      '</tbody></table></div></section>' +
+      '<section class="card pad b col" aria-label="Permessi del ruolo"><h2>Permessi per ruolo</h2><div class="pills" role="group" aria-label="Seleziona ruolo">' +
+      ROLES.map(function (r, i) { return '<button type="button" data-act="roleSel" data-i="' + i + '" data-key="rs' + i + '" aria-pressed="' + (S.roleSel === i) + '">' + r + '</button>'; }).join('') + '</div>' +
+      '<ul class="perm">' + PERMS.map(function (p, i) {
+        var s = MATRIX[S.roleSel][i];
+        return '<li><span>' + p + '</span>' + chip(s === NO ? 'muted' : (s === 'Tutti' ? 'acc' : 'info'), s) + '</li>';
+      }).join('') + '</ul><p class="note">Proposta da confermare con i responsabili del team. I permessi si possono assegnare anche a singole persone (es. permesso finanza al CFO).</p></section></div>';
+  }
+
+  /* ---------- Rendering ---------- */
+  function applyTheme() {
+    var r = document.documentElement;
+    r.setAttribute('data-skin', S.skin);
+    r.setAttribute('data-mode', S.mode);
+  }
+  function render() {
+    var activeKey = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-key');
+    var views = { admin: adminView, member: memberView, projects: projectsView, engineering: engineeringView, people: peopleView };
+    applyTheme();
+    document.getElementById('app').innerHTML = shell(views[S.view]());
+    if (activeKey) {
+      var el = document.querySelector('[data-key="' + activeKey + '"]');
+      if (el) el.focus({ preventScroll: true });
+    }
+  }
+  var toastTimer;
+  function toast(msg) { S.toast = msg; render(); clearTimeout(toastTimer); toastTimer = setTimeout(function () { S.toast = ''; render(); }, 2200); }
+  function setPerson(id, patch, msg, log) {
+    S.people = S.people.map(function (p) { return p.id === id ? Object.assign({}, p, patch) : p; });
+    S.audit.unshift([clock(), log]);
+    toast(msg);
+  }
+  function person(id) { return S.people.filter(function (p) { return p.id === id; })[0]; }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act]');
+    if (!t || t.tagName === 'INPUT') return;
+    var a = t.getAttribute('data-act'), id = t.getAttribute('data-id');
+    if (a === 'go') {
+      var to = t.getAttribute('data-to');
+      S.view = to; if (to === 'admin' || to === 'people') S.role = 'admin'; if (to === 'member') S.role = 'member';
+      window.scrollTo(0, 0); render();
+    } else if (a === 'role') {
+      S.role = t.getAttribute('data-to'); S.view = S.role === 'admin' ? 'admin' : 'member'; window.scrollTo(0, 0); render();
+    } else if (a === 'skin') {
+      S.skin = t.getAttribute('data-v'); S.mode = SKIN_MODE[S.skin]; render();
+    } else if (a === 'mode') {
+      S.mode = S.mode === 'dark' ? 'light' : 'dark'; render();
+    } else if (a === 'bell') {
+      S.role = 'member'; S.view = 'member'; render();
+      var n = document.getElementById('notifiche'); if (n) n.scrollIntoView({ block: 'center' });
+    } else if (a === 'approve') {
+      var p = person(id); setPerson(id, { s: 'Attivo' }, 'Approvata: ' + p.n, 'Richiesta di iscrizione approvata (' + p.n + ')');
+    } else if (a === 'reject') {
+      var q = person(id); S.people = S.people.filter(function (x) { return x.id !== id; }); S.audit.unshift([clock(), 'Richiesta di iscrizione rifiutata (' + q.n + ')']); toast('Rifiutata: ' + q.n);
+    } else if (a === 'suspend') {
+      var s = person(id); setPerson(id, { s: 'Sospeso' }, 'Sospeso: ' + s.n, 'Account sospeso: ' + s.n);
+    } else if (a === 'activate') {
+      var r = person(id); setPerson(id, { s: 'Attivo' }, 'Riattivato: ' + r.n, 'Account riattivato: ' + r.n);
+    } else if (a === 'ack') { S.acked = !S.acked; render();
+    } else if (a === 'rsvp') { var m = {}; for (var k in S.rsvp) m[k] = S.rsvp[k]; m[id] = t.getAttribute('data-v'); S.rsvp = m; render();
+    } else if (a === 'filter') { S.filter = t.getAttribute('data-v'); render();
+    } else if (a === 'sub') { S.sel = Number(t.getAttribute('data-i')); render();
+    } else if (a === 'tab') { S.tab = t.getAttribute('data-v'); render();
+    } else if (a === 'roleSel') { S.roleSel = Number(t.getAttribute('data-i')); render(); }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.getAttribute && t.getAttribute('data-act') === 'task') { S.done[t.getAttribute('data-id')] = t.checked; render(); }
+  });
+  render();
+})();
+</script>
